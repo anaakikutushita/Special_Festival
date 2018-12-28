@@ -22,5 +22,10 @@ class Test_ImageResizer(unittest.TestCase):
             self.assertEqual(new_h, orig_h)
             self.assertEqual(new_w, orig_w)
 
+class Test_UsingTimesCalclator(unittest.TestCase):
+    def test_get_number_inside_image(self):
+        """#4 ~ #7"""
+        
+
 if __name__ == '__main__':
     unittest.main()
