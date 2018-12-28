@@ -130,7 +130,8 @@ class UsingTimesCalclator():
 
     def _get_number_inside_image(self, narrow_area_image):
         """画像内に含まれる数字を識別して返す"""
-        return 1
+        number = pytesseract.image_to_string(narrow_area_image)
+        return number
 
 class UsingTimesConverter():
     """
