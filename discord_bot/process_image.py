@@ -2,7 +2,16 @@
 """
 画像解析から記録の保存まで全てを担うモジュール。source.pyから利用することが前提。
 """
+# -*- coding: utf-8 -*-
+
+# 丸め処理
 from decimal import Decimal, ROUND_DOWN
+
+# 数字認識
+import pytesseract
+from PIL import Image
+
+# その他画像処理
 import cv2
 
 class SpecialWeaponUsingTimesRecorder():
