@@ -26,39 +26,45 @@ class Test_ImageResizer(unittest.TestCase):
 
 class Test_UsingTimesCalclator(unittest.TestCase):
     def test_get_number_inside_image(self):
-        """#4 ~ #7"""
+        """#4 ~ #8"""
 
         # 4
         expected_num = 3
-        img4 = cv2.imread("unittest_resource/Issues/4/region1.jpg")
-        calclator = process_image.UsingTimesCalclator(img4)
-        num = calclator._get_number_inside_image(img4)
+        img4 = "unittest_resource/Issues/4/region1.jpg"
+        img = cv2.imread(img4)
+        calclator = process_image.UsingTimesCalclator(img)
+        num = calclator._get_number_inside_image(img)
         self.assertEqual(num, expected_num)
 
         # 5
         expected_num = [x for x in range(11)]
-        importer = AllJpgImageImporterInsideFolder("unittest_resource/Issues/5")
-        img_list5 = importer.get_image_list_jpg()
+        importer = AllJpgImageImporterInsideFolder("unittest_resource/Issues/5/")
+        img_list5 = importer.get_numpy_array_image_list_jpg()
+        print('img_list5 :')
+        print(img_list5)
         num_list = []
         for img5 in img_list5:
             num = calclator._get_number_inside_image(img5)
             num_list.append(num)
+        print('num_list : ')
         print(num_list)
+        print('expected_num : ')
         print(expected_num)
         for var in range(0, 11):
             self.assertEqual(num_list[var], expected_num[var])
 
         # 6
         expected_num = 0
-        img6 = cv2.imread("unittest_resource/Issues/6/0.jpg")
+        img6 = "unittest_resource/Issues/6/0.jpg"
+        img6 = cv2.imread(img6)
         calclator = process_image.UsingTimesCalclator(img6)
         num = calclator._get_number_inside_image(img6)
         self.assertEqual(num, expected_num)
 
         # 7
         expected_num = 6+4+7+2+1+10+3+3
-        importer = AllJpgImageImporterInsideFolder("unittest_resource/Issues/7")
-        img_list7 = importer.get_image_list_jpg()
+        importer = AllJpgImageImporterInsideFolder("unittest_resource/Issues/7/")
+        img_list7 = importer.get_numpy_array_image_list_jpg()
         using_times = 0
         for img7 in img_list7:
             num = calclator._get_number_inside_image(img7)
@@ -67,14 +73,14 @@ class Test_UsingTimesCalclator(unittest.TestCase):
 
         # 8
         expected_num = 4+0+0+0+9+0+0+0
-        importer = AllJpgImageImporterInsideFolder("unittest_resource/Issues/8")
-        img_list8 = importer.get_image_list_jpg()
+        importer = AllJpgImageImporterInsideFolder("unittest_resource/Issues/8/")
+        img_list8 = importer.get_numpy_array_image_list_jpg()
         using_times = 0
         for img8 in img_list8:
             num = calclator._get_number_inside_image(img8)
+            print(num)
             using_times += num
         self.assertEqual(using_times, expected_num)
-
 
 if __name__ == '__main__':
     unittest.main()

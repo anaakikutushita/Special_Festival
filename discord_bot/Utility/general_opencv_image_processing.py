@@ -11,15 +11,19 @@ class AllJpgImageImporterInsideFolder():
         #今のところは「スラッシュ1文字区切り」「フォルダパスの最後にスラッシュが入っている」条件で決め打ちする
         self._image_folder_path = image_folder_path
 
-    def get_image_list_jpg(self):
+    def get_numpy_array_image_list_jpg(self):
         """フォルダ内の.jpg拡張子のみ取得"""
-        return self._get_image_list("*.jpg")
+        return self._get_numpy_array_image_list("*.jpg")
 
-    def get_image_list_png(self):
+    def get_image_file_path_list_jpg(self):
+        """フォルダ内の.jpg拡張子のみ取得"""
+        return self._get_image_file_path_list("*.jpg")
+
+    def get_numpy_array_image_list_png(self):
         """フォルダ内の.png拡張子のみ取得"""
-        return self._get_image_list("*.png")
+        return self._get_numpy_array_image_list("*.png")
 
-    def _get_image_list(self, ext):
+    def _get_image_file_path_list(self, ext):
         """
         拡張子が一致する画像ファイルのフルパスのリストを返す。
         extには "*.jpg" などを指定する。
@@ -27,9 +31,19 @@ class AllJpgImageImporterInsideFolder():
         """
         image_file_path_list = glob.glob(self._image_folder_path + ext)
 
+        return image_file_path_list
+
+    def _get_numpy_array_image_list(self, ext):
+        """
+        拡張子が一致する画像のnumpy.arrayのリストを返す。
+        extには "*.jpg" などを指定する。
+        "*.*" を指定した場合、 jpg, png, gif, bmp, ico, svg, tiff の7種まで対応
+        """
+        image_file_path_list = self._get_image_file_path_list(ext)
+        
         img_list = []
         for image_file_path in image_file_path_list:
-            orig_img = cv2.imread(image_file_path)
-            img_list.append(orig_img)
+            img = cv2.imread(image_file_path)
+            img_list.append(img)
 
         return img_list

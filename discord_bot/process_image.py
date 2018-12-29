@@ -8,11 +8,13 @@
 from decimal import Decimal, ROUND_DOWN
 
 # 数字認識
+import re
+import cv2
 import pytesseract
 from PIL import Image
+from Utility.general_opencv_image_processing import AllJpgImageImporterInsideFolder
 
-# その他画像処理
-import cv2
+pytesseract.pytesseract.tesseract_cmd = r"E:/PgLang/Python/Tesseract-OCR/tesseract.exe"
 
 class SpecialWeaponUsingTimesRecorder():
     """
@@ -97,10 +99,10 @@ class UsingTimesCalclator():
 
     def calc(self):
         """スペシャル発動回数の合計を計算して返す"""
-        area_image_list = self._get_list_of_cropped_narrow_areas_from_whole_image()
+        area_array_list = self._get_list_of_cropped_narrow_areas_from_whole_image()
 
         using_times = int(0)
-        for area in area_image_list:
+        for area in area_array_list:
             using_times += self._get_number_inside_image(area)
 
         return using_times
@@ -108,7 +110,7 @@ class UsingTimesCalclator():
     def _get_list_of_cropped_narrow_areas_from_whole_image(self):
         """リザルト画像の中で、スペシャル発動数が記されている領域を指定する"""
         pos_dic = {
-            'x1':926, 'x2':961,
+            'x1':926, 'x2':956,
             'y1_p1':113, 'y2_p1':133,
             'y1_p2':163, 'y2_p2':183,
             'y1_p3':213, 'y2_p3':233,
@@ -128,10 +130,64 @@ class UsingTimesCalclator():
 
         return img_list
 
-    def _get_number_inside_image(self, narrow_area_image):
+    def _get_number_inside_image(self, narrow_area_numpy_array):
         """画像内に含まれる数字を識別して返す"""
-        number = pytesseract.image_to_string(narrow_area_image)
+        #img = self._get_grayscaled_numpy_array_object(narrow_area_numpy_array)
+        img = cv2.cvtColor(narrow_area_numpy_array, cv2.COLOR_BGR2GRAY)
+
+        if not self._exists_any_player_in_image(img):
+            return 0
+        
+        img = self._get_thresholded_numpy_array_object(img)
+        img = self._get_inversed_numpy_array_object(img)
+        number = pytesseract.image_to_string(img, lang="spl2n", config="--psm 7")
+        number = self._get_remains_int_or_zero(re.sub(r'\D', '', number))
         return number
+
+    def _get_grayscaled_numpy_array_object(self, numpy_array_image_object):
+        """ファイルパスの画像をグレースケール変換して取得する"""
+        gray = cv2.cvtColor(numpy_array_image_object, cv2.COLOR_BGR2GRAY)
+        return gray
+
+    def _get_thresholded_numpy_array_object(self, numpy_array_image_object):
+        """画像を読み取り、白黒の2値化処理を行う"""
+        threshold_value = 185
+        max_value = 255
+
+        ret,threshold = cv2.threshold(numpy_array_image_object, threshold_value, max_value, cv2.THRESH_BINARY)
+        return threshold
+
+    def _get_inversed_numpy_array_object(self, numpy_array_image_object):
+        """ネガポジ反転した画像を取得する。主に二値化処理を済ませた画像の入力を想定。"""
+        threshold = cv2.bitwise_not(numpy_array_image_object)
+        return threshold
+
+    def _get_image_object(self, numpy_array_image_object):
+        """numpy.arrayのオブジェクトをimageに変換する"""
+        img = Image.fromarray(numpy_array_image_object)
+        return img
+
+    def _get_remains_int_or_zero(self, int_suspended_str):
+        """intに変換できる値はそのまま返し、それ以外は0を返す"""
+        try:
+            num = int(int_suspended_str)
+        except:
+            return 0
+
+        return num
+    
+    def _exists_any_player_in_image(self, grayscaled_numpy_array):
+        """スペシャル使用回数を示す真っ白いピクセルが存在したら、プレイヤーが存在すると判断する"""
+        w, h = grayscaled_numpy_array.shape
+
+        for h_pos in range(0, h):
+            for w_pos in range(0, w):
+                pixel_value = grayscaled_numpy_array.item(w_pos, h_pos)
+
+                if pixel_value > 240:
+                    return True
+
+        return False
 
 class UsingTimesConverter():
     """
