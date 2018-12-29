@@ -40,16 +40,10 @@ class Test_UsingTimesCalclator(unittest.TestCase):
         expected_num = [x for x in range(11)]
         importer = AllJpgImageImporterInsideFolder("unittest_resource/Issues/5/")
         img_list5 = importer.get_numpy_array_image_list_jpg()
-        print('img_list5 :')
-        print(img_list5)
         num_list = []
         for img5 in img_list5:
             num = calclator._get_number_inside_image(img5)
             num_list.append(num)
-        print('num_list : ')
-        print(num_list)
-        print('expected_num : ')
-        print(expected_num)
         for var in range(0, 11):
             self.assertEqual(num_list[var], expected_num[var])
 
@@ -78,7 +72,6 @@ class Test_UsingTimesCalclator(unittest.TestCase):
         using_times = 0
         for img8 in img_list8:
             num = calclator._get_number_inside_image(img8)
-            print(num)
             using_times += num
         self.assertEqual(using_times, expected_num)
 
@@ -105,13 +98,27 @@ class Test_UsingTimesCalclator(unittest.TestCase):
             num = calclator.calc()
             using_times_list.append(num)
 
-        print('expected_nums')
-        print(expected_nums)
-        print('using_times_list')
-        print(using_times_list)
-
         for var in range(0, 8):
             self.assertEqual(using_times_list[var], expected_nums[var])
+
+class Test_PlayerNumCounter(unittest.TestCase):
+    def test_count(self):
+        """# 10"""
+        importer = AllJpgImageImporterInsideFolder("unittest_resource/Issues/10/")
+        image_path_list = importer.get_image_file_path_list_jpg()
+        
+        for image_path in image_path_list:
+            self._check_player_count(image_path)
+    
+    def _check_player_count(self, file_path):
+        expected_num, result_num = self._get_count_result(int(file_path[-7]), file_path)
+        self.assertEqual(result_num, expected_num)
+
+    def _get_count_result(self, expected_num, file_path):
+        img = cv2.imread(file_path)
+        counter = process_image.PlayerNumCounter(img)
+        result_num = counter.count()
+        return (expected_num, result_num)
 
 if __name__ == '__main__':
     unittest.main()

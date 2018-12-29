@@ -23,10 +23,9 @@ class SpecialWeaponUsingTimesRecorder():
     def __init__(self, result_image):
         self._result_image = result_image
 
-    def record(self):
+    def get_using_times_converted(self):
         """
-        画像解析から記録の保存まで全て行う。
-        記録まで成功した場合はTrue、そうでない場合はFalseを返す。
+        画像解析し、プレイヤー数とスペシャル回数から「換算後のスペシャル合計数」を算出する
         """
         # 画像の解像度を統一
         resizer = ImageResizer()
@@ -51,10 +50,7 @@ class SpecialWeaponUsingTimesRecorder():
         converter = UsingTimesConverter()
         using_times = converter.convert(temp_sp_num, player_num)
 
-        # 取得できた情報をスプレッドシートに書き込む
-
-        # 記録が成功したかどうかの結果を返す
-        return True
+        return using_times
 
 class ImageResizer():
     """
@@ -90,7 +86,43 @@ class PlayerNumCounter():
 
     def count(self):
         """プレイヤー数を計算する"""
-        return 2
+        area_array_list = self._get_list_of_cropped_narrow_areas_from_whole_image()
+        player_num = self._get_player_count(area_array_list)
+
+        return player_num
+
+    def _get_list_of_cropped_narrow_areas_from_whole_image(self):
+        """リザルト画像の中で、ウデマエやランクが記されている領域を指定する"""
+        pos_dic = {
+            'x1':642, 'x2':676,
+            'y1_p1':116, 'y2_p1':137,
+            'y1_p2':166, 'y2_p2':186,
+            'y1_p3':216, 'y2_p3':236,
+            'y1_p4':266, 'y2_p4':286,
+            'y1_p5':391, 'y2_p5':412,
+            'y1_p6':441, 'y2_p6':462,
+            'y1_p7':491, 'y2_p7':512,
+            'y1_p8':541, 'y2_p8':562,
+        }
+
+        img_list = []
+
+        for var in range(1, 9): #これでvarは1～8の間繰り返される
+            narrow_area = self.whole_image[eval("pos_dic['y1_p" + str(var) + "']"):eval("pos_dic['y2_p" + str(var) + "']"),
+                                           pos_dic['x1']:pos_dic['x2']]
+            img_list.append(narrow_area)
+
+        return img_list
+    
+    def _get_player_count(self, img_list):
+        """img_listのうち、プレイヤーあり判定されたものの数をカウントする"""
+        player_counter = 0
+        for img in img_list:
+            gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+            if exists_any_player_in_image(gray):
+                player_counter += 1
+
+        return player_counter
 
 class UsingTimesCalclator():
     """リザルト画像から、スペシャル発動回数の合計を計算する"""
@@ -135,7 +167,7 @@ class UsingTimesCalclator():
         #img = self._get_grayscaled_numpy_array_object(narrow_area_numpy_array)
         img = cv2.cvtColor(narrow_area_numpy_array, cv2.COLOR_BGR2GRAY)
 
-        if not self._exists_any_player_in_image(img):
+        if not exists_any_player_in_image(img):
             return 0
         
         img = self._get_thresholded_numpy_array_object(img)
@@ -175,19 +207,19 @@ class UsingTimesCalclator():
             return 0
 
         return num
-    
-    def _exists_any_player_in_image(self, grayscaled_numpy_array):
-        """スペシャル使用回数を示す真っ白いピクセルが存在したら、プレイヤーが存在すると判断する"""
-        w, h = grayscaled_numpy_array.shape
 
-        for h_pos in range(0, h):
-            for w_pos in range(0, w):
-                pixel_value = grayscaled_numpy_array.item(w_pos, h_pos)
+def exists_any_player_in_image(grayscaled_numpy_array):
+    """真っ白いピクセルが存在したら、プレイヤーが存在すると判断する"""
+    w, h = grayscaled_numpy_array.shape
 
-                if pixel_value > 240:
-                    return True
+    for h_pos in range(0, h):
+        for w_pos in range(0, w):
+            pixel_value = grayscaled_numpy_array.item(w_pos, h_pos)
 
-        return False
+            if pixel_value > 240:
+                return True
+
+    return False
 
 class UsingTimesConverter():
     """

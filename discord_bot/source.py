@@ -66,7 +66,10 @@ async def on_message(message):
         f.write(attached_data)
 
     recorder = process_image.SpecialWeaponUsingTimesRecorder(attached_data)
-    succeeded = recorder.record()
+    succeeded = recorder.get_using_times_converted()
+
+    # 取得できた情報をスプレッドシートに書き込む
+    # 記録が成功したかどうかの結果を返す
 
     if succeeded:
         await target_channel.send('記録は正常に処理されました！')
