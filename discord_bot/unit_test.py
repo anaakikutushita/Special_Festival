@@ -82,5 +82,36 @@ class Test_UsingTimesCalclator(unittest.TestCase):
             using_times += num
         self.assertEqual(using_times, expected_num)
 
+    def test_calc(self):
+        """# 9"""
+        expected_nums = [
+            4+3+3+2+0+1+2+2,
+            6+3+3+2+2+5+6+4,
+            5+3+4+4+4+7+1+1,
+            7+2+4+3+2+6+1+1,
+            5+5+7+3+7+8+4+3,
+            2+9+0+2+1+5+2+4,
+            3+10+3+1+3+3+4+3,
+            4+0+0+0+9+0+0+0
+            ]
+        
+        importer = AllJpgImageImporterInsideFolder("unittest_resource/Issues/9/")
+        img_list9 = importer.get_numpy_array_image_list_jpg()
+        
+        using_times = 0
+        using_times_list = []
+        for img9 in img_list9:
+            calclator = process_image.UsingTimesCalclator(img9)
+            num = calclator.calc()
+            using_times_list.append(num)
+
+        print('expected_nums')
+        print(expected_nums)
+        print('using_times_list')
+        print(using_times_list)
+
+        for var in range(0, 8):
+            self.assertEqual(using_times_list[var], expected_nums[var])
+
 if __name__ == '__main__':
     unittest.main()

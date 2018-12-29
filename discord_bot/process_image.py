@@ -124,7 +124,7 @@ class UsingTimesCalclator():
         img_list = []
 
         for var in range(1, 9): #これでvarは1～8の間繰り返される
-            narrow_area = self.whole_image[eval("pos_dic['y1_p" + var + "']"):eval("pos_dic['y2_p" + var + "']"),
+            narrow_area = self.whole_image[eval("pos_dic['y1_p" + str(var) + "']"):eval("pos_dic['y2_p" + str(var) + "']"),
                                            pos_dic['x1']:pos_dic['x2']]
             img_list.append(narrow_area)
 
