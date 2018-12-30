@@ -16,41 +16,39 @@ from Utility.general_opencv_image_processing import AllJpgImageImporterInsideFol
 
 pytesseract.pytesseract.tesseract_cmd = r"E:/PgLang/Python/Tesseract-OCR/tesseract.exe"
 
-class SpecialWeaponUsingTimesRecorder():
+class SpecialWeaponUsingTimesDetecter():
     """
     報告画像を解析し、スプレッドシートに記録する
     """
-    def __init__(self, result_image):
-        self._result_image = result_image
+    def __init__(self, result_image_numpy_array):
+        self._result_image_numpy_array = result_image_numpy_array
 
-    def get_using_times_converted(self):
+    def get_player_num_and_using_times_array(self):
         """
-        画像解析し、プレイヤー数とスペシャル回数から「換算後のスペシャル合計数」を算出する
+        画像解析し、プレイヤー数と個別のスペシャル回数を認識する。
         """
         # 画像の解像度を統一
         resizer = ImageResizer()
-        self._result_image = resizer.get_resized_image(self._result_image)
+        self._result_image_numpy_array = resizer.get_resized_image(self._result_image_numpy_array)
 
         # 画像の形式が合っているか判定する
         # ルールとステージが大会の指定に沿っているか判定する
         # タイムスタンプが大会の進行に沿っているか判定する
-        checker = ValidImageChecker(self._result_image)
+        checker = ValidImageChecker(self._result_image_numpy_array)
         if not checker.is_valid_image:
             return False
 
         # 部屋に参加しているプレイヤー数を求める
-        counter = PlayerNumCounter(self._result_image)
+        counter = PlayerNumCounter(self._result_image_numpy_array)
         player_num = counter.count()
 
-        # 全プレイヤーのスペシャル発動数の合計を求める
-        calclator = UsingTimesCalclator(self._result_image)
-        temp_sp_num = calclator.calc()
+        # プレイヤー1から8までそれぞれのスペシャル回数を求める
+        detecter = UsingTimesDetecter(self._result_image_numpy_array)
+        using_times_array = detecter.get_all_players_using_times_array()
 
-        # 8人換算した場合のスペシャル発動数を求める
-        converter = UsingTimesConverter()
-        using_times = converter.convert(temp_sp_num, player_num)
-
-        return using_times
+        result_array = using_times_array
+        result_array.insert(0, player_num)
+        return result_array
 
 class ImageResizer():
     """
@@ -124,20 +122,23 @@ class PlayerNumCounter():
 
         return player_counter
 
-class UsingTimesCalclator():
-    """リザルト画像から、スペシャル発動回数の合計を計算する"""
+class UsingTimesDetecter():
+    """リザルト画像から、スペシャル発動回数を認識する。合計はしない"""
     def __init__(self, result_image):
         self.whole_image = result_image
 
-    def calc(self):
-        """スペシャル発動回数の合計を計算して返す"""
+    def get_all_players_using_times_array(self):
+        """
+        プレイヤー位置1から位置8まで、それぞれのスペシャル回数を画像から読み取って配列にする。
+        プレイヤーがいない位置のスペシャル回数は0になる
+        """
         area_array_list = self._get_list_of_cropped_narrow_areas_from_whole_image()
 
-        using_times = int(0)
+        using_times_array = []
         for area in area_array_list:
-            using_times += self._get_number_inside_image(area)
+            using_times_array.append(self._get_number_inside_image(area))
 
-        return using_times
+        return using_times_array
 
     def _get_list_of_cropped_narrow_areas_from_whole_image(self):
         """リザルト画像の中で、スペシャル発動数が記されている領域を指定する"""
@@ -168,6 +169,7 @@ class UsingTimesCalclator():
         img = cv2.cvtColor(narrow_area_numpy_array, cv2.COLOR_BGR2GRAY)
 
         if not exists_any_player_in_image(img):
+            cv2.imwrite("no_white.jpg", img)
             return 0
         
         img = self._get_thresholded_numpy_array_object(img)
@@ -216,25 +218,10 @@ def exists_any_player_in_image(grayscaled_numpy_array):
         for w_pos in range(0, w):
             pixel_value = grayscaled_numpy_array.item(w_pos, h_pos)
 
-            if pixel_value > 240:
+            if pixel_value > 230:
                 return True
 
     return False
-
-class UsingTimesConverter():
-    """
-    スペシャル発動数の合計を8人換算する
-    """
-    def convert(self, using_times, player_num):
-        """スペシャル発動数 / プレイヤー数 * 8 を整数に丸めて返す。小数点以下切り捨て"""
-        max_player_num = 8
-        integral_value = Decimal('0')
-
-        converted = Decimal(using_times / player_num * max_player_num)
-        rounded = converted.quantize(integral_value, rounding=ROUND_DOWN)
-
-        return rounded
-
 
 if __name__ == '__main__':
     print('source.pyから実行してください')

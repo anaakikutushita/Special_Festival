@@ -65,8 +65,8 @@ async def on_message(message):
     with open("saved_attachments/{0}".format(filename), mode="wb") as f:
         f.write(attached_data)
 
-    recorder = process_image.SpecialWeaponUsingTimesRecorder(attached_data)
-    succeeded = recorder.get_using_times_converted()
+    recorder = process_image.SpecialWeaponUsingTimesDetecter(attached_data)
+    succeeded = recorder.get_player_num_and_using_times_array()
 
     # 取得できた情報をスプレッドシートに書き込む
     # 記録が成功したかどうかの結果を返す
