@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 
 # 画像処理用
+import cv2
 import process_image
 
 # ダウンロード用
@@ -58,18 +59,18 @@ async def on_message(message):
 
     # アクセス開始
     await target_channel.send('提出記録を処理しています……')
-    succeeded = False
-
     attached_data = urllib.request.urlopen(request).read()
 
     with open("saved_attachments/{0}".format(filename), mode="wb") as f:
         f.write(attached_data)
 
-    recorder = process_image.SpecialWeaponUsingTimesDetecter(attached_data)
-    succeeded = recorder.get_player_num_and_using_times_array()
+    img = cv2.imread("saved_attachments/{0}".format(filename))
+    detecter = process_image.SpecialWeaponUsingTimesDetecter(img)
+    result_array = detecter.get_player_num_and_using_times_array()
 
     # 取得できた情報をスプレッドシートに書き込む
     # 記録が成功したかどうかの結果を返す
+    succeeded = True
 
     if succeeded:
         await target_channel.send('記録は正常に処理されました！')
