@@ -23,6 +23,11 @@ import discord
 
 CLIENT = discord.Client()
 
+MESSAGE_URL_HEAD = 'https://discordapp.com/channels/'
+SERVER_ID = '520060780087869472' #スペシャル祭り杯サーバーのID
+#CHANNEL_ID = '520061986898313216' #リザルト画像を送信するチャンネルのID(本番)
+CHANNEL_ID = '526950365887987722' #リザルト画像を送信するチャンネルのID(テスト)
+
 @CLIENT.event
 async def on_ready():
     print('Logged in as')
@@ -32,11 +37,8 @@ async def on_ready():
 
 @CLIENT.event
 async def on_message(message):
-    channel_id_testing = 526950365887987722
-    channel_id_production = 520061986898313216
-
     #botはこのチャンネルの中にのみ反応・書き込みする
-    target_channel = CLIENT.get_channel(channel_id_testing)
+    target_channel = CLIENT.get_channel(int(CHANNEL_ID))
 
     # botは次の条件を全て満たした場合のみ作動する
     # 1：target_channel内に送信されたメッセージである
@@ -68,12 +70,22 @@ async def on_message(message):
     detecter = process_image.SpecialWeaponUsingTimesDetecter(img)
     result_array = detecter.get_player_num_and_using_times_array()
 
+    # 送信者IDを追加
+    result_array.insert(0, "#" + str(message.author.discriminator))
+
+    # メッセージの固有URLを末尾に追加
+    ids = [SERVER_ID, CHANNEL_ID, str(message.id)]
+    connected_id = "/".join(ids)
+    message_url = MESSAGE_URL_HEAD + connected_id
+    result_array.append(message_url)
+
     # 取得できた情報をスプレッドシートに書き込む
     # 記録が成功したかどうかの結果を返す
     succeeded = True
 
     if succeeded:
-        await target_channel.send('記録は正常に処理されました！')
+        #await target_channel.send('記録は正常に処理されました！')
+        print(result_array)
     else:
         # エラーが出たら運営にメンションを飛ばす。その後手動で回避する
         # 手動で処理するにあたって、どのメッセージでエラーが出たのか埋め込みで分かるようにする
