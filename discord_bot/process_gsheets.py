@@ -23,6 +23,23 @@ workbook = gc.open_by_key(SPREADSHEET_KEY)
 worksheet_list = workbook.worksheets()
 TARGET_WORK_SHEET = workbook.get_worksheet(len(worksheet_list)-1)
 
+# discord_idを書き込む列番号を取得
+DISCORD_ID_COL = TARGET_WORK_SHEET.find('discord_id').col
+
+def main():
+    # 検索値がシート上になかった場合どうなるのか試したい
+    # 結果は、gspread.exceptions.CellNotFound例外が発生する
+    # cell = TARGET_WORK_SHEET.find('hoge')
+    # row = cell.row
+    # col = cell.col
+    # print(row)
+    # print(col)
+
+    # 列の値を全て取得したとき、どんな配列になるのか試したい
+    # 結果は、ブランク以降の要素は格納されない
+    values_list = TARGET_WORK_SHEET.col_values(DISCORD_ID_COL)
+    print(values_list)
+
 class ResultArrayDataRecorder():
     def __init__(self, result_array):
         self._result_array = result_array
@@ -30,10 +47,31 @@ class ResultArrayDataRecorder():
     def record(self):
         """受け取った情報をスプレッドシートに書き込む"""
         for i, val in enumerate(self._result_array):
-            #最初に書き込む列が8であり、順に書き込むだけだからこうしてる
+            #最初に書き込む列がDISCORD_ID_COLであり、順に書き込むだけだからこうしてる
             #そのうち修正が必要
-            col = i + 8
-            TARGET_WORK_SHEET.update_cell(2, col, val)
-        
+            col = i + DISCORD_ID_COL
+            row = self._get_writing_row_number()
+            TARGET_WORK_SHEET.update_cell(row, col, val)
+
         return True
 
+    def _get_writing_row_number(self):
+        target_row = 0
+        # これから書き込む #0000 という値が既に存在する場合はその行をセット
+        try:
+            cell = TARGET_WORK_SHEET.find(self._result_array[0])
+            target_row = cell.row
+        except:
+            # 存在しない場合は例外が発生するので、列を上から探索して最初にブランクになる行をセット
+            target_row = self._get_first_blank_row_number(DISCORD_ID_COL)
+
+        return target_row
+
+    def _get_first_blank_row_number(self, col_num):
+        # 行1から12まで詰まっている場合、要素数12の配列になる。
+        # 新規行を取得するにはlenを調べて+1すればよい
+        values_list = TARGET_WORK_SHEET.col_values(col_num)
+        return len(values_list) + 1
+
+if __name__ == "__main__":
+    main()

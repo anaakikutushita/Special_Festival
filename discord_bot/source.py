@@ -72,7 +72,7 @@ async def on_message(message):
     detecter = process_image.SpecialWeaponUsingTimesDetecter(img)
     result_array = detecter.get_player_num_and_using_times_array()
 
-    # 送信者IDを追加
+    # 送信者IDを追加（配列の先端）
     result_array.insert(0, "#" + str(message.author.discriminator))
 
     # メッセージの固有URLを末尾に追加
