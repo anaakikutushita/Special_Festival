@@ -1,5 +1,6 @@
 """discord botで使用するメインプログラム"""
 # -*- coding: utf-8 -*-
+import datetime
 
 # 画像処理用
 import cv2
@@ -22,11 +23,13 @@ import asyncio
 import discord
 
 CLIENT = discord.Client()
-
 MESSAGE_URL_HEAD = 'https://discordapp.com/channels/'
 SERVER_ID = '520060780087869472' #スペシャル祭り杯サーバーのID
 #CHANNEL_ID = '520061986898313216' #リザルト画像を送信するチャンネルのID(本番)
 CHANNEL_ID = '526950365887987722' #リザルト画像を送信するチャンネルのID(テスト)
+
+# Gsheets用
+import process_gsheets
 
 @CLIENT.event
 async def on_ready():
@@ -50,23 +53,22 @@ async def on_message(message):
         return
 
     url = message.attachments[0].url
-    filename = message.attachments[0].filename
-
-    # FireFoxに偽装して正常にアクセス可能にする
+    # ヘッダーをFireFoxに偽装して正常にアクセス可能にする
     headers = {
         "User-Agent": "Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:47.0) Gecko/20100101 Firefox/47.0",
     }
-
     request = urllib.request.Request(url=url, headers=headers)
 
     # アクセス開始
     await target_channel.send('提出記録を処理しています……')
     attached_data = urllib.request.urlopen(request).read()
 
-    with open("saved_attachments/{0}".format(filename), mode="wb") as f:
+    now = datetime.datetime.now()
+    file_name = "saved_attachments/{0:%Y%m%d%H%M%S}.jpg".format(now)
+    with open(file_name, mode="wb") as f:
         f.write(attached_data)
 
-    img = cv2.imread("saved_attachments/{0}".format(filename))
+    img = cv2.imread(file_name)
     detecter = process_image.SpecialWeaponUsingTimesDetecter(img)
     result_array = detecter.get_player_num_and_using_times_array()
 
@@ -80,12 +82,12 @@ async def on_message(message):
     result_array.append(message_url)
 
     # 取得できた情報をスプレッドシートに書き込む
-    # 記録が成功したかどうかの結果を返す
-    succeeded = True
+    succeeded = False
+    recorder = process_gsheets.ResultArrayDataRecorder(result_array)
+    succeeded = recorder.record()
 
     if succeeded:
-        #await target_channel.send('記録は正常に処理されました！')
-        print(result_array)
+        await target_channel.send('記録は正常に処理されました！')
     else:
         # エラーが出たら運営にメンションを飛ばす。その後手動で回避する
         # 手動で処理するにあたって、どのメッセージでエラーが出たのか埋め込みで分かるようにする
