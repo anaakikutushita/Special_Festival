@@ -75,7 +75,8 @@ async def on_message(message):
     result_array = detecter.get_player_num_and_using_times_array()
 
     # 送信者IDを追加（配列の先端）
-    result_array.insert(0, "#" + str(message.author.discriminator))
+    discord_id = "#" + str(message.author.discriminator)
+    result_array.insert(0, discord_id)
 
     # メッセージの固有URLを末尾に追加
     ids = [SERVER_ID, CHANNEL_ID, str(message.id)]
@@ -93,7 +94,15 @@ async def on_message(message):
         succeeded = False
 
     if succeeded:
-        await target_channel.send(f'{message.author.mention} 記録は正常に処理されました！\\r\\n現在、あなたチームは暫定{0}位です。')
+        comment = f'{message.author.mention} \r\n記録は正常に処理されました！'
+        try:
+            rank = process_gsheets.RankReader().read(discord_id)
+            comment = comment + f'\r\n現在、あなたのチームは暫定{rank}位です。'
+        except:
+            rank = None
+        finally:
+            comment = comment + '\r\nこのスプレッドシートの一番右のシートから全体の順位を見られます。 https://docs.google.com/spreadsheets/d/1aWJ4qOF6-LHhtlO7Ev9EUk2st4-6lBUnMuGsODT7FaE/edit#gid=0&range=A1'
+            await target_channel.send(comment)
     else:
         # エラーが出たら運営にメンションを飛ばす。その後手動で回避する
         # 手動で処理するにあたって、どのメッセージでエラーが出たのか埋め込みで分かるようにする
@@ -105,8 +114,8 @@ async def on_message(message):
         )
         embed.set_author(name=message.author, icon_url=message.author.avatar_url)
         embed.set_image(url=url)
-
-        await target_channel.send('記録の自動処理に失敗しました。 <@193700834305900544> が手動で処理するのをお待ちください。', embed=embed)
+        rule_and_stages = process_gsheets.get_rule_and_stages()
+        await target_channel.send(f'{message.author.mention} \r\nごめんなさい。画像を自動処理できませんでした。\r\nもしかしたらルールやステージを間違えているかも？現在のラウンドは\r\n{rule_and_stages}です。\r\n合っている場合は <@193700834305900544> が手動で処理するのをお待ちください。', embed=embed)
 
 token = "NTI2OTIyODM5MTAyNTg2ODgw.DwMWtA.zqPa3JlZS3Oq1kUxpwAzVIVUoOo"
 CLIENT.run(token)
