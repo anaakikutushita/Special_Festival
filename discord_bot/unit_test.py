@@ -84,9 +84,6 @@ class Test_StageNameDetecter(unittest.TestCase):
             test_img_paths = importer.get_image_file_path_list_jpg()
 
             for img_path in test_img_paths:
-                if img_path == "unittest_resource/Issues/16//hokke\\4.jpg":
-                    continue
-
                 img = cv2.imread(img_path)
                 detected_name = detecter.detect(img)
                 print("detecting is " + img_path)
