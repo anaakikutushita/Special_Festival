@@ -33,7 +33,9 @@ class SpecialWeaponUsingTimesDetecter():
         resizer = ImageResizer()
         self._result_image_numpy_array = resizer.get_resized_image(self._result_image_numpy_array)
 
-        
+        # ステージ名を特定
+        detecter = StageNameDetecter()
+        stage_name = detecter.detect(self._result_image_numpy_array)
         
         # 画像の形式が合っているか判定する
         # ルールとステージが大会の指定に沿っているか判定する
