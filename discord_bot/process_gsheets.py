@@ -27,6 +27,14 @@ ROUND_SHEET = workbook.get_worksheet(0)
 # discord_idを書き込む列番号を取得
 DISCORD_ID_COL = WRITING_WORK_SHEET.find('discord_id').col
 
+# プレイヤー数を書き込む列番号の配列を取得
+WRITING_TARGET_COL = [
+    0, #0という値は取得しないが、インデックスを参照するのが1～3のためダミーで入れておく
+    WRITING_WORK_SHEET.find('s1_pn').col,
+    WRITING_WORK_SHEET.find('s2_pn').col,
+    WRITING_WORK_SHEET.find('s3_pn').col
+]
+
 def main():
     # 検索値がシート上になかった場合どうなるのか試したい
     # 結果は、gspread.exceptions.CellNotFound例外が発生する
@@ -114,11 +122,12 @@ class ResultArrayDataRecorder():
         #配列の中からステージ名を探索
         for i, val in enumerate(row_list):
             if val == stage_name:
+                #iは0スタート
                 #ステージ1の列番号は3からスタート
                 return i + 1 - 2
 
     def _get_target_col_num(self, stage_num):
-        return 1
+        return WRITING_TARGET_COL[stage_num]
 
     def _get_first_blank_row_number(self, col_num):
         # 行1から12まで詰まっている場合、要素数12の配列になる。

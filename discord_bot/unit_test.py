@@ -119,7 +119,7 @@ class Test_ResultArrayDataRecorder(unittest.TestCase):
             print("name is " + stage_name)
             self.assertEqual(stage_name, self.stage_names[stage_name_roman])
 
-    def _get_stage_num_from_gspread(self):
+    def test_get_stage_num_from_gspread(self):
         """#24"""
         recorder = process_gsheets.ResultArrayDataRecorder([])
         test_stages = {
@@ -132,6 +132,16 @@ class Test_ResultArrayDataRecorder(unittest.TestCase):
             print('stage_num is ' + str(stage_num))
             print('stage_name is ' +stage_name)
             self.assertEqual(stage_num, key)
+    
+    def test_get_target_col_num(self):
+        recorder = process_gsheets.ResultArrayDataRecorder([])
+        stage_nums = [1, 2, 3]
+        expected_cols = [9, 19, 29] #I列、S列、AC列
+        for i, stage_num in enumerate(stage_nums):
+            target_col = recorder._get_target_col_num(stage_num)
+            print("expected is " + str(expected_cols[i]))
+            print("result is " + str(target_col))
+            self.assertEqual(target_col, expected_cols[i])
 
 if __name__ == '__main__':
     unittest.main()
