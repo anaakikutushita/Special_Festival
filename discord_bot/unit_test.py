@@ -134,6 +134,7 @@ class Test_ResultArrayDataRecorder(unittest.TestCase):
             self.assertEqual(stage_num, key)
     
     def test_get_target_col_num(self):
+        """#24"""
         recorder = process_gsheets.ResultArrayDataRecorder([])
         stage_nums = [1, 2, 3]
         expected_cols = [9, 19, 29] #I列、S列、AC列
