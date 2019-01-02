@@ -93,14 +93,8 @@ class Test_StageNameDetecter(unittest.TestCase):
                 self.assertEqual(detected_name, stage_folder)
 
 class Test_ResultArrayDataRecorder(unittest.TestCase):
-    def test_get_stage_name_from_roman(self):
-        """#23"""
-        path = "_stage_model"
-        files = os.listdir(path)
-        stage_names_roman = [f for f in files if os.path.isfile(os.path.join(path, f))]
-        stage_names_roman = map(get_file_name_without_extension, stage_names_roman)
-
-        stage_names = {
+    def setUp(self):
+        self.stage_names = {
             "battera":"バッテラストリート",
             "bbasu":"Bバスパーク",
             "hokke":"ホッケふ頭",
@@ -110,14 +104,34 @@ class Test_ResultArrayDataRecorder(unittest.TestCase):
             "otoro":"ホテルニューオートロ",
             "sumeshi":"スメーシーワールド"
         }
+    
+    def test_get_stage_name_from_roman(self):
+        """#23"""
+        path = "_stage_model"
+        files = os.listdir(path)
+        stage_names_roman = [f for f in files if os.path.isfile(os.path.join(path, f))]
+        stage_names_roman = map(get_file_name_without_extension, stage_names_roman)
 
         recorder = process_gsheets.ResultArrayDataRecorder([])
         for stage_name_roman in stage_names_roman:
             stage_name = recorder._get_stage_name_from_roman(stage_name_roman)
             print("roman is " + stage_name_roman)
             print("name is " + stage_name)
-            self.assertEqual(stage_name, stage_names[stage_name_roman])
+            self.assertEqual(stage_name, self.stage_names[stage_name_roman])
 
+    def _get_stage_num_from_gspread(self):
+        """#24"""
+        recorder = process_gsheets.ResultArrayDataRecorder([])
+        test_stages = {
+            1:"Bバスパーク",
+            2:"スメーシーワールド",
+            3:"マンタマリア号"
+        }
+        for key, stage_name in test_stages.items():
+            stage_num = recorder._get_stage_num_from_gspread(stage_name)
+            print('stage_num is ' + str(stage_num))
+            print('stage_name is ' +stage_name)
+            self.assertEqual(stage_num, key)
 
 if __name__ == '__main__':
     unittest.main()
