@@ -70,7 +70,7 @@ class ResultArrayDataRecorder():
             col = i + target_col
             WRITING_SHEET.update_cell(row, col, val)
 
-        
+        self._mark_as_reference_record(row, self._result_array[0])
 
         return True
 
