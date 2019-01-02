@@ -46,11 +46,18 @@ class ResultArrayDataRecorder():
 
     def record(self):
         """受け取った情報をスプレッドシートに書き込む"""
-        for i, val in enumerate(self._result_array):
-            #最初に書き込む列がDISCORD_ID_COLであり、順に書き込むだけだからこうしてる
-            #そのうち修正が必要
-            col = i + DISCORD_ID_COL
-            row = self._get_writing_row_number()
+        row = self._get_writing_row_number()
+        
+        #[0],つまりdiscord_idを書き込む列番号は固定
+        TARGET_WORK_SHEET.update_cell(row, DISCORD_ID_COL, self._result_array[0])
+
+        #[1],つまりローマ字のステージ名から、スペシャル回数などを書き込む列番号を取得
+        target_col = self._get_writing_col_number(self._result_array[1])
+
+        writing_list = self._result_array[2:]
+        for i, val in enumerate(writing_list):
+            #あとは順番に書き込む
+            col = i + target_col
             TARGET_WORK_SHEET.update_cell(row, col, val)
 
         return True
@@ -66,6 +73,38 @@ class ResultArrayDataRecorder():
             target_row = self._get_first_blank_row_number(DISCORD_ID_COL)
 
         return target_row
+
+    def _get_writing_col_number(self, stage_name_roman):
+        # ローマ字ステージ名から日本語ステージ名を取得
+        stage_name = self._get_stage_name_from_roman(stage_name_roman)
+
+        # 日本語ステージ名をスプレッドシートから探索し、現在のラウンドにおけるステージ番号を特定する
+        stage_num = self._get_stage_num(stage_name)
+
+        # ステージ番号から、スプレッドシートに書き込む列番号を取得する
+        target_col = self._get_target_col_num(stage_num)
+
+        return target_col
+
+    def _get_stage_name_from_roman(self, stage_name_roman):
+        stage_names = {
+            "battera":"バッテラストリート",
+            "bbasu":"Bバスパーク",
+            "hokke":"ホッケふ頭",
+            "hujitsubo":"フジツボスポーツクラブ",
+            "manta":"マンタマリア号",
+            "mozuku":"モズク農園",
+            "otoro":"ホテルニューオートロ",
+            "sumeshi":"スメーシーワールド"
+        }
+        return stage_names[stage_name_roman]
+
+    def _get_stage_num(self, stage_name):
+        
+        return 1
+
+    def _get_target_col_num(self, stage_num):
+        return 1
 
     def _get_first_blank_row_number(self, col_num):
         # 行1から12まで詰まっている場合、要素数12の配列になる。

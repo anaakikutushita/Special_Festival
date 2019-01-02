@@ -5,6 +5,8 @@ import cv2
 
 import process_image
 from Utility.general_opencv_image_processing import AllJpgImageImporterInsideFolder
+import process_gsheets
+from Utility.process_path_string import get_file_name_without_extension
 
 class Test_ImageResizer(unittest.TestCase):
     def setUp(self):
@@ -89,6 +91,33 @@ class Test_StageNameDetecter(unittest.TestCase):
                 print("detecting is " + img_path)
                 print("detected is " + detected_name)
                 self.assertEqual(detected_name, stage_folder)
+
+class Test_ResultArrayDataRecorder(unittest.TestCase):
+    def test_get_stage_name_from_roman(self):
+        """#23"""
+        path = "_stage_model"
+        files = os.listdir(path)
+        stage_names_roman = [f for f in files if os.path.isfile(os.path.join(path, f))]
+        stage_names_roman = map(get_file_name_without_extension, stage_names_roman)
+
+        stage_names = {
+            "battera":"バッテラストリート",
+            "bbasu":"Bバスパーク",
+            "hokke":"ホッケふ頭",
+            "hujitsubo":"フジツボスポーツクラブ",
+            "manta":"マンタマリア号",
+            "mozuku":"モズク農園",
+            "otoro":"ホテルニューオートロ",
+            "sumeshi":"スメーシーワールド"
+        }
+
+        recorder = process_gsheets.ResultArrayDataRecorder([])
+        for stage_name_roman in stage_names_roman:
+            stage_name = recorder._get_stage_name_from_roman(stage_name_roman)
+            print("roman is " + stage_name_roman)
+            print("name is " + stage_name)
+            self.assertEqual(stage_name, stage_names[stage_name_roman])
+
 
 if __name__ == '__main__':
     unittest.main()

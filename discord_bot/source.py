@@ -63,11 +63,13 @@ async def on_message(message):
     await target_channel.send('提出記録を処理しています……')
     attached_data = urllib.request.urlopen(request).read()
 
+    # 添付ファイルを一度保存する
     now = datetime.datetime.now()
     file_name = "saved_attachments/{0:%Y%m%d%H%M%S}.jpg".format(now)
     with open(file_name, mode="wb") as f:
         f.write(attached_data)
 
+    # cv2で添付ファイルを読み込みなおす。画像解析でスペシャル回数などを取得
     img = cv2.imread(file_name)
     detecter = process_image.SpecialWeaponUsingTimesDetecter(img)
     result_array = detecter.get_player_num_and_using_times_array()

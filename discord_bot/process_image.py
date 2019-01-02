@@ -54,6 +54,22 @@ class SpecialWeaponUsingTimesDetecter():
 
         result_array = using_times_array
         result_array.insert(0, player_num)
+        result_array.insert(0, stage_name)
+
+        """
+        result_arrayの構成
+        
+        ステージ名（ローマ字）
+        プレイヤー数
+        p1スペシャル数
+        p2スペシャル数
+        p3スペシャル数
+        p4スペシャル数
+        p5スペシャル数
+        p6スペシャル数
+        p7スペシャル数
+        p8スペシャル数
+        """
         return result_array
 
 class ImageResizer():
