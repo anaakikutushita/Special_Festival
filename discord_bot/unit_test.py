@@ -144,5 +144,10 @@ class Test_ResultArrayDataRecorder(unittest.TestCase):
             print("result is " + str(target_col))
             self.assertEqual(target_col, expected_cols[i])
 
+    def test_mark_as_reference_record(self):
+        """#17"""
+        recorder = process_gsheets.ResultArrayDataRecorder([])
+        recorder._mark_as_reference_record(2, "#4369")
+
 if __name__ == '__main__':
     unittest.main()

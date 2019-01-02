@@ -21,18 +21,19 @@ SPREADSHEET_KEY = '1aWJ4qOF6-LHhtlO7Ev9EUk2st4-6lBUnMuGsODT7FaE'
 ############################################################
 workbook = gc.open_by_key(SPREADSHEET_KEY)
 worksheet_list = workbook.worksheets()
-WRITING_WORK_SHEET = workbook.get_worksheet(len(worksheet_list)-1)
+WRITING_SHEET = workbook.get_worksheet(len(worksheet_list)-1)
 ROUND_SHEET = workbook.get_worksheet(0)
+TEAM_SHEET = workbook.get_worksheet(1)
 
 # discord_idを書き込む列番号を取得
-DISCORD_ID_COL = WRITING_WORK_SHEET.find('discord_id').col
+DISCORD_ID_COL = WRITING_SHEET.find('discord_id').col
 
 # プレイヤー数を書き込む列番号の配列を取得
 WRITING_TARGET_COL = [
     0, #0という値は取得しないが、インデックスを参照するのが1～3のためダミーで入れておく
-    WRITING_WORK_SHEET.find('s1_pn').col,
-    WRITING_WORK_SHEET.find('s2_pn').col,
-    WRITING_WORK_SHEET.find('s3_pn').col
+    WRITING_SHEET.find('s1_pn').col,
+    WRITING_SHEET.find('s2_pn').col,
+    WRITING_SHEET.find('s3_pn').col
 ]
 
 def main():
@@ -46,7 +47,7 @@ def main():
 
     # 列の値を全て取得したとき、どんな配列になるのか試したい
     # 結果は、ブランク以降の要素は格納されない
-    values_list = WRITING_WORK_SHEET.col_values(DISCORD_ID_COL)
+    values_list = WRITING_SHEET.col_values(DISCORD_ID_COL)
     print(values_list)
 
 class ResultArrayDataRecorder():
@@ -58,7 +59,7 @@ class ResultArrayDataRecorder():
         row = self._get_writing_row_number()
         
         #[0],つまりdiscord_idを書き込む列番号は固定
-        WRITING_WORK_SHEET.update_cell(row, DISCORD_ID_COL, self._result_array[0])
+        WRITING_SHEET.update_cell(row, DISCORD_ID_COL, self._result_array[0])
 
         #[1],つまりローマ字のステージ名から、スペシャル回数などを書き込む列番号を取得
         target_col = self._get_writing_col_number(self._result_array[1])
@@ -67,7 +68,9 @@ class ResultArrayDataRecorder():
         for i, val in enumerate(writing_list):
             #あとは順番に書き込む
             col = i + target_col
-            WRITING_WORK_SHEET.update_cell(row, col, val)
+            WRITING_SHEET.update_cell(row, col, val)
+
+        
 
         return True
 
@@ -75,7 +78,7 @@ class ResultArrayDataRecorder():
         target_row = 0
         # これから書き込む #0000 という値が既に存在する場合はその行をセット
         try:
-            cell = WRITING_WORK_SHEET.find(self._result_array[0])
+            cell = WRITING_SHEET.find(self._result_array[0])
             target_row = cell.row
         except:
             # 存在しない場合は例外が発生するので、列を上から探索して最初にブランクになる行をセット
@@ -132,8 +135,25 @@ class ResultArrayDataRecorder():
     def _get_first_blank_row_number(self, col_num):
         # 行1から12まで詰まっている場合、要素数12の配列になる。
         # 新規行を取得するにはlenを調べて+1すればよい
-        values_list = WRITING_WORK_SHEET.col_values(col_num)
+        values_list = WRITING_SHEET.col_values(col_num)
         return len(values_list) + 1
+
+    def _mark_as_reference_record(self, recording_row, discord_id):
+        """
+        結果を記録したとき、そのチームが勝ち上がりでない場合は「順位」列の式を削除して「参考」という文字列に置き換える
+        チーム登録していない場合も同様
+        """
+        #discord_idから参加状況を取得する。"o"以外の場合は参考記録にする
+        try:
+            target_row = TEAM_SHEET.find(discord_id).row
+        except gspread.exceptions.CellNotFound: #参加チーム一覧に載っていない場合
+            target_row = 1 #絶対にoが書いてない行
+        
+        target_col = 4 #参加状況が書いてあるのは4列目で固定
+        status = TEAM_SHEET.cell(target_row, target_col).value
+
+        if status != "o":
+            WRITING_SHEET.update_cell(recording_row, 1, "参考")
 
 if __name__ == "__main__":
     main()
