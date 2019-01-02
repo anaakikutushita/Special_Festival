@@ -60,7 +60,7 @@ async def on_message(message):
     request = urllib.request.Request(url=url, headers=headers)
 
     # アクセス開始
-    await target_channel.send('提出記録を処理しています……')
+    await target_channel.send(f'{message.author.mention} 提出記録を処理しています……')
     attached_data = urllib.request.urlopen(request).read()
 
     # 添付ファイルを一度保存する
@@ -93,7 +93,7 @@ async def on_message(message):
         succeeded = False
 
     if succeeded:
-        await target_channel.send('記録は正常に処理されました！')
+        await target_channel.send(f'{message.author.mention} 記録は正常に処理されました！\\r\\n現在、あなたチームは暫定{0}位です。')
     else:
         # エラーが出たら運営にメンションを飛ばす。その後手動で回避する
         # 手動で処理するにあたって、どのメッセージでエラーが出たのか埋め込みで分かるようにする
