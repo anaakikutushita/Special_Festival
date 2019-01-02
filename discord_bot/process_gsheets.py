@@ -64,6 +64,9 @@ class ResultArrayDataRecorder():
         #[1],つまりローマ字のステージ名から、スペシャル回数などを書き込む列番号を取得
         target_col = self._get_writing_col_number(self._result_array[1])
 
+        if target_col == -1:
+            return False
+
         writing_list = self._result_array[2:]
         for i, val in enumerate(writing_list):
             #あとは順番に書き込む
@@ -109,7 +112,8 @@ class ResultArrayDataRecorder():
             "otoro":"ホテルニューオートロ",
             "sumeshi":"スメーシーワールド"
         }
-        return stage_names[stage_name_roman]
+
+        return stage_name
 
     def _get_stage_num_from_gspread(self, stage_name):
         #ラウンド数の列から最終行を取得
@@ -144,6 +148,7 @@ class ResultArrayDataRecorder():
         チーム登録していない場合も同様
         """
         #discord_idから参加状況を取得する。"o"以外の場合は参考記録にする
+        target_row = 1
         try:
             target_row = TEAM_SHEET.find(discord_id).row
         except gspread.exceptions.CellNotFound: #参加チーム一覧に載っていない場合

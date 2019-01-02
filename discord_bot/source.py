@@ -86,7 +86,11 @@ async def on_message(message):
     # 取得できた情報をスプレッドシートに書き込む
     succeeded = False
     recorder = process_gsheets.ResultArrayDataRecorder(result_array)
-    succeeded = recorder.record()
+    
+    try:
+        succeeded = recorder.record()
+    except:
+        succeeded = False
 
     if succeeded:
         await target_channel.send('記録は正常に処理されました！')
