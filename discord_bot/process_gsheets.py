@@ -75,16 +75,7 @@ class ResultArrayDataRecorder():
         return True
 
     def _get_writing_row_number(self):
-        target_row = 0
-        # これから書き込む #0000 という値が既に存在する場合はその行をセット
-        try:
-            cell = WRITING_SHEET.find(self._result_array[0])
-            target_row = cell.row
-        except:
-            # 存在しない場合は例外が発生するので、列を上から探索して最初にブランクになる行をセット
-            target_row = self._get_first_blank_row_number(DISCORD_ID_COL)
-
-        return target_row
+        return get_writing_row_number(self._result_array[0])
 
     def _get_writing_col_number(self, stage_name_roman):
         # ローマ字ステージ名から日本語ステージ名を取得
@@ -133,12 +124,6 @@ class ResultArrayDataRecorder():
     def _get_target_col_num(self, stage_num):
         return WRITING_TARGET_COL[stage_num]
 
-    def _get_first_blank_row_number(self, col_num):
-        # 行1から12まで詰まっている場合、要素数12の配列になる。
-        # 新規行を取得するにはlenを調べて+1すればよい
-        values_list = WRITING_SHEET.col_values(col_num)
-        return len(values_list) + 1
-
     def _mark_as_reference_record(self, recording_row, discord_id):
         """
         結果を記録したとき、そのチームが勝ち上がりでない場合は「順位」列の式を削除して「参考」という文字列に置き換える
@@ -156,6 +141,39 @@ class ResultArrayDataRecorder():
 
         if status != "o":
             WRITING_SHEET.update_cell(recording_row, 1, "参考")
+
+def get_writing_row_number(discord_id):
+    target_row = 0
+    # これから書き込む #0000 という値が既に存在する場合はその行をセット
+    try:
+        cell = WRITING_SHEET.find(discord_id)
+        target_row = cell.row
+    except:
+        # 存在しない場合は例外が発生するので、列を上から探索して最初にブランクになる行をセット
+        target_row = get_first_blank_row_number(DISCORD_ID_COL)
+
+    return target_row
+
+def get_first_blank_row_number(col_num):
+    # 行1から12まで詰まっている場合、要素数12の配列になる。
+    # 新規行を取得するにはlenを調べて+1すればよい
+    values_list = WRITING_SHEET.col_values(col_num)
+    return len(values_list) + 1
+
+class RankReader():
+    def read(self, discord_id) -> int:
+        row = get_writing_row_number(discord_id)
+        # 順位を記録しているのは1列目で固定
+        rank = WRITING_SHEET.cell(row, 1).value
+        # 順位にはint以外も入ってくることがあるが、例外が発生するのはOK
+        return int(rank)
+
+def get_rule_and_stages():
+    round_num_col = 1
+    values_list = ROUND_SHEET.col_values(round_num_col)
+    latest_round_row = len(values_list)
+    row_list = ROUND_SHEET.row_values(latest_round_row)
+    return f'ルール：{row_list[1]}\r\nステージ：\r\n①⇒{row_list[2]}\r\n②⇒{row_list[3]}\r\n③⇒{row_list[4]}'
 
 if __name__ == "__main__":
     main()
