@@ -1,11 +1,13 @@
 
 """
-画像解析から記録の保存まで全てを担うモジュール。source.pyから利用することが前提。
+画像を解析し、情報を読み取るモジュール。source.pyから利用することが前提。
 """
 # -*- coding: utf-8 -*-
 
-# 丸め処理
-from decimal import Decimal, ROUND_DOWN
+# ステージ認識
+import os.path
+import numpy as np
+from Utility.process_path_string import get_file_name_without_extension
 
 # 数字認識
 import re
@@ -31,6 +33,8 @@ class SpecialWeaponUsingTimesDetecter():
         resizer = ImageResizer()
         self._result_image_numpy_array = resizer.get_resized_image(self._result_image_numpy_array)
 
+        
+        
         # 画像の形式が合っているか判定する
         # ルールとステージが大会の指定に沿っているか判定する
         # タイムスタンプが大会の進行に沿っているか判定する
@@ -61,6 +65,99 @@ class ImageResizer():
         サイズは決め打ち
         """
         return cv2.resize(result_image, (1024, 640))
+
+class StageNameDetecter():
+    def __init__(self):
+        self._model_stage_hists_dic = self._get_model_hists_dic()
+    
+    def detect(self, target_image) -> str:
+        target_hist_dic = self._get_stage_hist_of_all_region_from_result_image(target_image, "target")
+
+        path = "_stage_model"
+        files = os.listdir(path)
+        stage_names = [f for f in files if os.path.isfile(os.path.join(path, f))]
+        stage_names = map(get_file_name_without_extension, stage_names)
+        for stage_name in stage_names:
+            left_similarity = cv2.compareHist(target_hist_dic["target_left"], self._model_stage_hists_dic["{0}_left".format(stage_name)], 0)
+            right_similarity = cv2.compareHist(target_hist_dic["target_right"], self._model_stage_hists_dic["{0}_right".format(stage_name)], 0)
+
+            # compareHistは全く同じ画像の時1.0となる
+            detect_threshold = 0.8
+            if (left_similarity > detect_threshold and
+                right_similarity > detect_threshold):
+                return stage_name
+        
+        return "failed"
+
+    def _get_model_hists_dic(self) -> dict:
+        importer = AllJpgImageImporterInsideFolder("_stage_model/")
+        img_paths = importer.get_image_file_path_list_jpg()
+        hist_dic = {}
+        for img_path in img_paths:
+            img = cv2.imread(img_path)
+            stage_name = os.path.basename(img_path)
+            stage_name = os.path.splitext(stage_name)[0]
+            hist = self._get_stage_hist_of_all_region_from_result_image(img, stage_name)
+            hist_dic.update(hist)
+
+        return hist_dic
+
+    def _get_stage_hist_of_all_region_from_result_image(self, target_image, dic_key) -> dict:
+        regions = [
+            "left",
+            "right"
+        ]
+        hist_region_left = {
+            "x1":0,
+            "x2":199,
+            "y1":119,
+            "y2":441
+        }
+        hist_region_right = {
+            "x1":365,
+            "x2":546,
+            "y1":119,
+            "y2":441
+        }
+
+        hist_dic = {}
+        for region in regions:
+            hist_vec = self._get_image_hist_vector(target_image, hist_region=eval("hist_region_" + region))
+            hist_dic[dic_key + "_" + region] = hist_vec
+        
+        return hist_dic
+
+    def _get_image_hist_vector(self, target_image, hist_region=None):
+        """
+        BGR三色を考慮したヒストグラムのベクトルを取得する。
+        ベクトルどうしでcv2.compareHistが可能。
+        """
+        #binsはヒストグラム解析の解像度を示す指標。最も詳細に解析する場合は256でよい
+        all_bins = [256]
+        #rangeはヒストグラム解析の対象となる画素領域。最も詳細に解析する場合は[0,256]でよい
+        all_ranges = [0, 256]
+
+        mask = self._get_mask(target_image, hist_region)
+
+        hist_bgr = []
+        #channelは0,1,2がそれぞれB,G,Rに相当。グレースケールの場合は0
+        for channel in range(3):
+            hist = cv2.calcHist([target_image], [channel], mask, all_bins, all_ranges)
+            hist_bgr.append(hist)
+
+        hist_array = np.array(hist_bgr)
+
+        # hist_vecの計算方法はよくわからない。参考記事を写しただけ https://ensekitt.hatenablog.com/entry/2018/07/09/200000
+        hist_vec = hist_array.reshape(hist_array.shape[0]*hist_array.shape[1], 1)
+        return hist_vec
+    
+    def _get_mask(self, img, region):
+        if region is None:
+            return None
+        
+        mask = np.zeros(img.shape[:2], np.uint8)
+        mask[region["y1"]:region["y2"], region["x1"]:region["x2"]] = 255
+        return mask
 
 class ValidImageChecker():
     """

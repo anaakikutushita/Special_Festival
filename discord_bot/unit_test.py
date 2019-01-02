@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 import unittest
-import cv2
 import os
+import cv2
 
 import process_image
 from Utility.general_opencv_image_processing import AllJpgImageImporterInsideFolder
@@ -71,6 +71,27 @@ class Test_SpecialWeaponUsingTimesDetecter(unittest.TestCase):
             print("result_array is " + str(result_array))
 
             self.assertEqual(result_array, expected_array)
+
+class Test_StageNameDetecter(unittest.TestCase):
+    def test_detect_stage_name(self):
+        resourse_folder = "unittest_resource/Issues/16/"
+        files = os.listdir(resourse_folder)
+        stage_folders = [f for f in files if os.path.isdir(os.path.join(resourse_folder, f))]
+        detecter = process_image.StageNameDetecter()
+
+        for stage_folder in stage_folders:
+            importer = AllJpgImageImporterInsideFolder(resourse_folder + "/" + stage_folder + "/")
+            test_img_paths = importer.get_image_file_path_list_jpg()
+
+            for img_path in test_img_paths:
+                if img_path == "unittest_resource/Issues/16//hokke\\4.jpg":
+                    continue
+
+                img = cv2.imread(img_path)
+                detected_name = detecter.detect(img)
+                print("detecting is " + img_path)
+                print("detected is " + detected_name)
+                self.assertEqual(detected_name, stage_folder)
 
 if __name__ == '__main__':
     unittest.main()
