@@ -64,9 +64,6 @@ class ResultArrayDataRecorder():
         #[1],つまりローマ字のステージ名から、スペシャル回数などを書き込む列番号を取得
         target_col = self._get_writing_col_number(self._result_array[1])
 
-        if target_col == -1:
-            return False
-
         writing_list = self._result_array[2:]
         for i, val in enumerate(writing_list):
             #あとは順番に書き込む
@@ -113,7 +110,7 @@ class ResultArrayDataRecorder():
             "sumeshi":"スメーシーワールド"
         }
 
-        return stage_name
+        return stage_names[stage_name_roman]
 
     def _get_stage_num_from_gspread(self, stage_name):
         #ラウンド数の列から最終行を取得
