@@ -115,7 +115,8 @@ async def on_message(message):
         embed.set_author(name=message.author, icon_url=message.author.avatar_url)
         embed.set_image(url=url)
         rule_and_stages = process_gsheets.get_rule_and_stages()
-        await target_channel.send(f'{message.author.mention} \r\nごめんなさい。画像を自動処理できませんでした。\r\nもしかしたらルールやステージを間違えているかも？現在のラウンドは\r\n{rule_and_stages}です。\r\n合っている場合は <@193700834305900544> が手動で処理するのをお待ちください。', embed=embed)
+        await target_channel.send(f'{message.author.mention} \r\nごめんなさい。画像を自動処理できませんでした。\r\nもしかしたらルールやステージを間違えているかも？現在のラウンドは\r\n{rule_and_stages}です。')
+        await target_channel.send('画像が指定の形式じゃないのかもしれません。\r\n規定に沿った画像の作り方はこちらをチェック！ https://discordapp.com/channels/520060780087869472/520061134678654976/529858878469439500 \r\n合っている場合は <@193700834305900544> が手動で処理するのをお待ちください。', embed=embed)
 
 token = "NTI2OTIyODM5MTAyNTg2ODgw.DwMWtA.zqPa3JlZS3Oq1kUxpwAzVIVUoOo"
 CLIENT.run(token)
