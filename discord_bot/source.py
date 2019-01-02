@@ -25,8 +25,8 @@ import discord
 CLIENT = discord.Client()
 MESSAGE_URL_HEAD = 'https://discordapp.com/channels/'
 SERVER_ID = '520060780087869472' #スペシャル祭り杯サーバーのID
-#CHANNEL_ID = '520061986898313216' #リザルト画像を送信するチャンネルのID(本番)
-CHANNEL_ID = '526950365887987722' #リザルト画像を送信するチャンネルのID(テスト)
+CHANNEL_ID = '520061986898313216' #リザルト画像を送信するチャンネルのID(本番)
+#CHANNEL_ID = '526950365887987722' #リザルト画像を送信するチャンネルのID(テスト)
 
 # Gsheets用
 import process_gsheets
