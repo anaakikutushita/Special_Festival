@@ -3,3 +3,4 @@ expeiment/
 auth/
 discord_bot/discord.log
 discord_bot/__pycache__/process_gsheets.cpython-37.pyc
+qiita記事.md
